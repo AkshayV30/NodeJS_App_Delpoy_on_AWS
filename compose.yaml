@@ -8,11 +8,13 @@
 # database or a cache. For examples, see the Awesome Compose repository:
 # https://github.com/docker/awesome-compose
 services:
-  server:
+  app:
+    image: hello-world-pearl-nodejs
     build:
       context: .
+      dockerfile: Dockerfile
     environment:
-      NODE_ENV: production
+      NODE_ENV: devlopment
     ports:
       - 3000:3000
 

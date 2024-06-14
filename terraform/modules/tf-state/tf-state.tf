@@ -1,4 +1,0 @@
-# aws_s3_bucket
-# aws_s3_bucket_versioning
-# aws_s3_bucket_server_side_encryption_configuration
-# aws_dynamodb_table

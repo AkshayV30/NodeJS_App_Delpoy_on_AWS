@@ -9,10 +9,8 @@
 # https://github.com/docker/awesome-compose
 services:
   server:
-    image: hello-world-pearl-nodejs
     build:
       context: .
-      dockerfile: Dockerfile
     environment:
       NODE_ENV: devlopment
     ports:

@@ -1,1 +1,31 @@
 node_modules/
+
+# Ignore Terraform state files
+*.tfstate
+*.tfstate.*
+
+
+# Ignore Terraform crash log files
+crash.log
+
+# Ignore Terraform variable files with sensitive information
+*.tfvars
+
+# Ignore any directories created by Terraform
+.terraform/
+.terraform.lock.hcl
+
+
+# Ignore backup files created by Terraform
+*.tfplan
+
+# Ignore any log files
+*.log
+
+# Ignore local settings files for IDEs
+.idea/
+.vscode/
+
+# Ignore other system-specific files
+.DS_Store
+Thumbs.db

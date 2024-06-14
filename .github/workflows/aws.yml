@@ -71,8 +71,8 @@ jobs:
       id: build-image
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        # IMAGE_TAG: ${{ github.sha }}
-        IMAGE_TAG: ${{github.run_id}}
+        IMAGE_TAG: "latest"
+        # IMAGE_TAG: ${{github.run_id}}
       run: |
         docker build -t  ${{ secrets.ECR_REPOSITORY_NAME }}:$IMAGE_TAG .
         docker tag ${{ secrets.ECR_REPOSITORY_NAME }}:$IMAGE_TAG ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPOSITORY_NAME }}:$IMAGE_TAG

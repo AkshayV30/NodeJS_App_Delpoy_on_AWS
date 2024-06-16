@@ -8,7 +8,7 @@ const port = 3000;
 app.get('/',(req,res)=>{
 
    res.send(`
-      <h1>  hello World : Pearl Thoughts v7</h1>`);
+      <h1>  hello World : Pearl Thoughts v7.1</h1>`);
 
 });
 

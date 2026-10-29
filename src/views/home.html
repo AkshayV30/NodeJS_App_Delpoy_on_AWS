@@ -3,28 +3,66 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="A production-minded Node.js service deployment demo.">
+    <meta name="description" content="Live technical details for the Pearl Node Service demo.">
     <title>Pearl Node Service</title>
-    <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="/assets/css/styles.css">
+    <script type="module" src="/assets/js/service-details.js"></script>
   </head>
   <body>
-    <main class="card">
-      <span class="eyebrow">Node.js · Express · AWS ECS Fargate</span>
-      <h1>Pearl Node Service</h1>
-      <p class="status" role="status"><span class="status__dot" aria-hidden="true"></span>Service is running</p>
-      <p class="description">A compact, production-minded deployment demo showing how a Node.js service can be packaged and operated on AWS.</p>
-      <ul class="features">
-        <li>Container image published to Amazon ECR</li>
-        <li>Service deployed on Amazon ECS Fargate behind an Application Load Balancer</li>
-        <li>Infrastructure described with Terraform</li>
-        <li>Health checks and structured request logs included</li>
-      </ul>
-      <nav class="links" aria-label="Service links">
-        <a href="/api/v1/info">Service info</a>
-        <a href="/health/live">Liveness</a>
-        <a href="/health/ready">Readiness</a>
-      </nav>
+    <main>
+      <p class="eyebrow">Node.js service deployment demo</p>
+      <h1 id="service-name">Pearl Node Service</h1>
+
+      <div class="status-bar">
+        <p class="status" id="service-status" data-state="loading" aria-live="polite">
+          <span class="status__dot" aria-hidden="true"></span>
+          Checking service status…
+        </p>
+        <span class="meta-tag" id="environment-badge">Loading environment…</span>
+      </div>
+
+      <!-- Endpoints section positioned directly under status bar -->
+      <section class="info-section endpoints-section" aria-labelledby="endpoints-heading">
+        <h2 id="endpoints-heading">Endpoints</h2>
+        <nav class="links" aria-label="Service endpoints">
+          <div class="link-item">
+            <span class="link-label">Service info</span>
+            <a href="/api/v1/info"><code>/api/v1/info</code></a>
+          </div>
+          <div class="link-item">
+            <span class="link-label">Liveness</span>
+            <a href="/health/live"><code>/health/live</code></a>
+          </div>
+          <div class="link-item">
+            <span class="link-label">Readiness</span>
+            <a href="/health/ready"><code>/health/ready</code></a>
+          </div>
+        </nav>
+      </section>
+
+      <p class="description">
+        Runtime and deployment details are loaded from this running service and refresh automatically.
+      </p>
+
+      <section class="info-section" aria-labelledby="details-heading">
+        <h2 id="details-heading">Live deployment details</h2>
+        <dl class="details-list">
+          <dt>Version</dt>
+          <dd id="service-version">Loading…</dd>
+          <dt>Platform</dt>
+          <dd id="service-platform">Loading…</dd>
+          <dt>Runtime</dt>
+          <dd id="service-runtime">Loading…</dd>
+          <dt>Framework</dt>
+          <dd id="service-framework">Loading…</dd>
+          <dt>Port</dt>
+          <dd id="service-port">Loading…</dd>
+          <dt>Uptime</dt>
+          <dd id="service-uptime">Loading…</dd>
+          <dt>Started</dt>
+          <dd id="service-started-at">Loading…</dd>
+        </dl>
+      </section>
     </main>
   </body>
 </html>

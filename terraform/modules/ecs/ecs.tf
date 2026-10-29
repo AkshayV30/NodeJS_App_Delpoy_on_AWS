@@ -24,6 +24,12 @@ resource "aws_ecs_task_definition" "node_app_task" {
       cpu       = 256 #0.25 vCPU
       memory    = 512 #0.5GB(512 MiB)
       essential = true
+      environment = [
+        {
+          name  = "APP_PLATFORM"
+          value = "AWS ECS Fargate"
+        }
+      ]
       healthCheck = {
         command     = ["CMD", "node", "src/healthcheck.js"]
         interval    = 30

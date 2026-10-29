@@ -1,0 +1,59 @@
+
+name: Publish Docker image to ECR
+description: Build and push an immutable, run-specific image tag
+
+inputs:
+  aws-region:
+    description: AWS region
+    required: true
+  aws-account-id:
+    description: AWS account ID
+    required: true
+  ecr-repository:
+    description: Existing ECR repository name
+    required: true
+  image-tag:
+    description: Unique image tag
+    required: true
+
+outputs:
+  image-uri:
+    description: Full URI of the published image
+    value: ${{ steps.publish.outputs.image-uri }}
+
+runs:
+  using: composite
+  steps:
+    - name: Authenticate to ECR
+      shell: bash
+      env:
+        AWS_REGION: ${{ inputs.aws-region }}
+        AWS_ACCOUNT_ID: ${{ inputs.aws-account-id }}
+      run: |
+        set -euo pipefail
+
+        registry="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
+
+        aws ecr get-login-password --region "$AWS_REGION" |
+          docker login \
+            --username AWS \
+            --password-stdin "$registry"
+
+    - name: Build and push image
+      id: publish
+      shell: bash
+      env:
+        AWS_REGION: ${{ inputs.aws-region }}
+        AWS_ACCOUNT_ID: ${{ inputs.aws-account-id }}
+        ECR_REPOSITORY: ${{ inputs.ecr-repository }}
+        IMAGE_TAG: ${{ inputs.image-tag }}
+      run: |
+        set -euo pipefail
+
+        registry="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
+        image_uri="${registry}/${ECR_REPOSITORY}:${IMAGE_TAG}"
+
+        docker build --pull --tag "$image_uri" .
+        docker push "$image_uri"
+
+        echo "image-uri=$image_uri" >> "$GITHUB_OUTPUT"

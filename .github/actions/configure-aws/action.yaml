@@ -1,0 +1,64 @@
+
+name: Configure AWS credentials
+description: Validate configuration and assume an AWS role using OIDC
+
+inputs:
+  aws-region:
+    description: AWS deployment region
+    required: true
+  aws-account-id:
+    description: Expected AWS account ID
+    required: true
+  aws-role-arn:
+    description: IAM role ARN trusted by GitHub OIDC
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Validate configuration
+      shell: bash
+      env:
+        AWS_REGION: ${{ inputs.aws-region }}
+        AWS_ACCOUNT_ID: ${{ inputs.aws-account-id }}
+        AWS_ROLE_ARN: ${{ inputs.aws-role-arn }}
+      run: |
+        set -euo pipefail
+
+        : "${AWS_REGION:?AWS region is required}"
+        : "${AWS_ACCOUNT_ID:?AWS account ID is required}"
+        : "${AWS_ROLE_ARN:?AWS role ARN is required}"
+
+        if [[ ! "$AWS_ACCOUNT_ID" =~ ^[0-9]{12}$ ]]; then
+          echo "::error::AWS account ID must contain 12 digits."
+          exit 1
+        fi
+
+        if [[ ! "$AWS_ROLE_ARN" =~ ^arn:aws(-[a-z]+)?:iam::[0-9]{12}:role/.+ ]]; then
+          echo "::error::AWS role ARN is invalid."
+          exit 1
+        fi
+
+    - name: Assume AWS role with OIDC
+      uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502
+      with:
+        role-to-assume: ${{ inputs.aws-role-arn }}
+        aws-region: ${{ inputs.aws-region }}
+        allowed-account-ids: ${{ inputs.aws-account-id }}
+        role-session-name: gha-${{ github.run_id }}-${{ github.run_attempt }}
+        mask-aws-account-id: true
+
+    - name: Verify AWS identity
+      shell: bash
+      env:
+        EXPECTED_ACCOUNT_ID: ${{ inputs.aws-account-id }}
+      run: |
+        set -euo pipefail
+
+        actual_account_id="$(aws sts get-caller-identity \
+          --query Account --output text)"
+
+        if [[ "$actual_account_id" != "$EXPECTED_ACCOUNT_ID" ]]; then
+          echo "::error::Unexpected AWS account."
+          exit 1
+        fi

@@ -1,46 +1,66 @@
-import express, { json } from 'express';
-import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { requestMiddleware } from './middleware.js';
-import routes from './routes.js';
+import { resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
+import { APP_VERSION } from './config.js';
+import { createApp } from './app.js';
 
-const publicDirectory = join(dirname(fileURLToPath(import.meta.url)), 'public');
+export function startServer() {
+  const port = Number.parseInt(process.env.PORT || '3000', 10);
+  if (!Number.isInteger(port) || port < 1 || port > 65535) {
+    throw new Error('PORT must be an integer from 1 to 65535');
+  }
 
-export function createApp() {
-  const app = express();
-  app.disable('x-powered-by');
-  app.set('trust proxy', process.env.TRUST_PROXY === 'true' ? 1 : false);
-  app.use(requestMiddleware);
-  app.use(json({ limit: '16kb', strict: true }));
-  app.use('/assets', express.static(publicDirectory));
-  app.use(routes);
+  const server = createApp().listen(port, '0.0.0.0');
 
-  app.use((_req, res) => {
-    res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Route not found' } });
+  server.once('listening', () => {
+    console.log(JSON.stringify({
+      level: 'info',
+      event: 'server_started',
+      port,
+      environment: process.env.NODE_ENV || 'development',
+      version: APP_VERSION,
+    }));
   });
 
-  app.use((err, req, res, _next) => {
-    const status = Number.isInteger(err.status) && err.status >= 400 && err.status < 500
-      ? err.status
-      : 500;
-    const code = status === 400 ? 'INVALID_REQUEST' : status === 413 ? 'REQUEST_TOO_LARGE' : 'INTERNAL_ERROR';
-
+  server.once('error', (error) => {
     console.error(JSON.stringify({
       level: 'error',
-      event: 'request_error',
-      requestId: req.requestId,
-      status,
-      message: err.message,
+      event: 'server_start_failed',
+      message: error.message,
     }));
-
-    res.status(status).json({
-      error: {
-        code,
-        message: status === 500 ? 'An unexpected error occurred' : err.message,
-        requestId: req.requestId,
-      },
-    });
+    process.exitCode = 1;
   });
 
-  return app;
+  let shuttingDown = false;
+  function shutdown(signal) {
+    if (shuttingDown) return;
+    shuttingDown = true;
+    console.log(JSON.stringify({ level: 'info', event: 'shutdown_started', signal }));
+
+    const timeout = setTimeout(() => {
+      console.error(JSON.stringify({ level: 'error', event: 'shutdown_timed_out' }));
+      process.exit(1);
+    }, 10000).unref();
+
+    server.close((error) => {
+      clearTimeout(timeout);
+      if (error) {
+        console.error(JSON.stringify({
+          level: 'error',
+          event: 'shutdown_failed',
+          message: error.message,
+        }));
+        process.exitCode = 1;
+        return;
+      }
+      console.log(JSON.stringify({ level: 'info', event: 'shutdown_complete' }));
+    });
+  }
+
+  process.once('SIGTERM', () => shutdown('SIGTERM'));
+  process.once('SIGINT', () => shutdown('SIGINT'));
+  return server;
+}
+
+if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
+  startServer();
 }

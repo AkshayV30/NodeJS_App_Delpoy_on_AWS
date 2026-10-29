@@ -18,7 +18,7 @@ RUN npm ci --omit=dev
 FROM node:20-alpine AS runtime
 
 # Enforce  mode and configure the default application port
-ENV NODE_ENV=production PORT=3000
+ENV NODE_ENV=production PORT=3000 APP_PLATFORM=Container
 WORKDIR /app
 
 # Copy  node_modules from the dependencies stage with proper file ownership
@@ -39,4 +39,4 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
   CMD ["node", "src/healthcheck.js"]
 
 # Start the application using the preferred array/exec syntax
-CMD ["node", "src/app.js"]
+CMD ["node", "src/server.js"]

@@ -1,0 +1,19 @@
+name: Test Node.js application
+description: Install dependencies and run the application test suite
+
+runs:
+  using: composite
+  steps:
+    - name: Set up Node.js
+      uses: actions/setup-node@1e60f620b9541d7fdbf43dfdf3b49c47ed1fe5b
+      with:
+        node-version: 20
+        cache: npm
+
+    - name: Install dependencies
+      shell: bash
+      run: npm ci
+
+    - name: Run tests
+      shell: bash
+      run: npm test

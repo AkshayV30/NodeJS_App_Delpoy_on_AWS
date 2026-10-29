@@ -1,53 +1,56 @@
-import { resolve } from 'node:path';
-import { pathToFileURL } from 'node:url';
-import { APP_VERSION } from './config.js';
-import { createApp } from './server.js';
+import express from 'express';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { requestMiddleware } from './middleware.js';
+import routes from './routes.js';
 
-export const app = createApp();
+const publicDirectory = join(dirname(fileURLToPath(import.meta.url)), 'public');
 
-export function startServer() {
-  const port = Number.parseInt(process.env.PORT || '3000', 10);
-  if (!Number.isInteger(port) || port < 1 || port > 65535) {
-    throw new Error('PORT must be an integer from 1 to 65535');
-  }
+/**
+ * Create the Express application without opening a network listener.
+ * Keeping startup separate makes the app straightforward to exercise in tests.
+ */
+export function createApp() {
+  const app = express();
 
-  const server = app.listen(port, '0.0.0.0', () => {
-    console.log(JSON.stringify({
-      level: 'info',
-      event: 'server_started',
-      port,
-      environment: process.env.NODE_ENV || 'development',
-      version: APP_VERSION,
-    }));
+  app.disable('x-powered-by');
+  app.set('trust proxy', process.env.TRUST_PROXY === 'true' ? 1 : false);
+  app.use(requestMiddleware);
+  app.use(express.json({ limit: '16kb', strict: true }));
+  app.use('/assets', express.static(publicDirectory));
+  app.use(routes);
+
+  app.use((_req, res) => {
+    res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Route not found' } });
   });
 
-  let shuttingDown = false;
-  function shutdown(signal) {
-    if (shuttingDown) return;
-    shuttingDown = true;
-    console.log(JSON.stringify({ level: 'info', event: 'shutdown_started', signal }));
+  app.use((err, req, res, _next) => {
+    const error = err instanceof Error ? err : new Error('Request failed');
+    const status = Number.isInteger(error.status) && error.status >= 400 && error.status < 500
+      ? error.status
+      : 500;
+    const code = status === 400
+      ? 'INVALID_REQUEST'
+      : status === 413
+        ? 'REQUEST_TOO_LARGE'
+        : 'INTERNAL_ERROR';
 
-    const timeout = setTimeout(() => {
-      console.error('Graceful shutdown timed out');
-      process.exit(1);
-    }, 10000).unref();
+    console.error(JSON.stringify({
+      level: 'error',
+      event: 'request_error',
+      requestId: req.requestId,
+      status,
+      message: error.message,
+    }));
 
-    server.close((error) => {
-      clearTimeout(timeout);
-      if (error) {
-        console.error(error);
-        process.exit(1);
-      }
-      console.log(JSON.stringify({ level: 'info', event: 'shutdown_complete' }));
-      process.exit(0);
+    res.status(status).json({
+      error: {
+        code,
+        message: status === 500 ? 'An unexpected error occurred' : error.message,
+        requestId: req.requestId,
+      },
     });
-  }
+  });
 
-  process.on('SIGTERM', () => shutdown('SIGTERM'));
-  process.on('SIGINT', () => shutdown('SIGINT'));
-  return server;
-}
-
-if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
-  startServer();
+  return app;
 }

@@ -29,7 +29,7 @@ graph TD
     %% Client Access & Deployment Drivers
     Client[Browser] -->|2. HTTPS/HTTP| ALB
     ALB --> TG
-    GA -.->|Deploys via OIDC<br>--force-new-deployment| ECS
+    GA -.->|Deploys immutable image<br>task definition revision| ECS
 
     %% Styling
     classDef aws fill:#FF9900,stroke:#fff,stroke-width:2px,color:#fff;

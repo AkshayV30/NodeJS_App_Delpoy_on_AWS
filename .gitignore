@@ -1,31 +1,47 @@
+# Node.js dependencies, logs, and test output
 node_modules/
-
-# Ignore Terraform state files
-*.tfstate
-*.tfstate.*
-
-
-# Ignore Terraform crash log files
-crash.log
-
-# Ignore Terraform variable files with sensitive information
-*.tfvars
-
-# Ignore any directories created by Terraform
-.terraform/
-.terraform.lock.hcl
-
-
-# Ignore backup files created by Terraform
-*.tfplan
-
-# Ignore any log files
+coverage/
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
 *.log
 
-# Ignore local settings files for IDEs
+# Local environment files and secrets
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# Terraform local data, state, plans, and crash reports
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+*.tfplan
+*.tfplan.*
+*.tfvars
+*.tfvars.json
+!*.example.tfvars
+!*.example.tfvars.json
+crash.log
+crash.*.log
+
+# Terraform machine-local CLI config and override files
+.terraformrc
+terraform.rc
+override.tf
+*_override.tf
+override.tf.json
+*_override.tf.json
+
+# Local cloud credentials and private key material
+.aws/
+*.pem
+*.p12
+*.pfx
+*.key
+
+# Editor and operating-system files
 .idea/
 .vscode/
-
-# Ignore other system-specific files
 .DS_Store
 Thumbs.db

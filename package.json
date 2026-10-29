@@ -1,14 +1,21 @@
 {
-  "name": "joining-task-7-june-2024",
-  "version": "1.0.0",
-  "description": "",
-  "main": "app.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+  "name": "pearl-node-service",
+  "version": "2.0.0",
+  "description": "Express service and AWS ECS Fargate deployment demo",
+  "main": "src/app.js",
+  "engines": {
+    "node": ">=20"
   },
+  "scripts": {
+    "start": "node src/app.js",
+    "dev": "node --watch src/app.js",
+    "healthcheck": "node src/healthcheck.js",
+    "test": "node --test"
+  },
+  "type": "module",
   "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "Akshay Minz",
+  "license": "UNLICENSED",
   "dependencies": {
     "express": "^4.19.2"
   }

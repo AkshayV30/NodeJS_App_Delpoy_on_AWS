@@ -1,5 +1,3 @@
-
-
 resource "aws_ecs_cluster" "node_app_cluster" {
   name = var.cluster_name
 
@@ -17,8 +15,7 @@ resource "aws_ecs_task_definition" "node_app_task" {
   network_mode             = "awsvpc"
   cpu                      = 256 #0.25 vCPU
   memory                   = 512 #0.5GB(512 MiB)
-  # execution_role_arn       = data.aws_iam_role.ecs_task_execution_role.arn
-  execution_role_arn = data.aws_iam_role.existing_ecs_task_execution_role.arn
+  execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
 
   container_definitions = jsonencode([
     {
@@ -27,6 +24,13 @@ resource "aws_ecs_task_definition" "node_app_task" {
       cpu       = 256 #0.25 vCPU
       memory    = 512 #0.5GB(512 MiB)
       essential = true
+      healthCheck = {
+        command     = ["CMD", "node", "src/healthcheck.js"]
+        interval    = 30
+        timeout     = 5
+        retries     = 3
+        startPeriod = 15
+      }
       portMappings = [
         {
           containerPort = var.container_port,

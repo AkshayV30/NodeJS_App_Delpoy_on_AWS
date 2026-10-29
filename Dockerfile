@@ -1,38 +1,42 @@
 # syntax=docker/dockerfile:1
 
-# Comments are provided throughout this file to help you get started.
-# If you need more help, visit the Dockerfile reference guide at
-# https://docs.docker.com/go/dockerfile-reference/
+# ---------------------------------
+# Stage 1: Build Dependencies
+# ---------------------------------
+FROM node:20-alpine AS dependencies
+WORKDIR /app
 
-# Want to help us make this template better? Share your feedback here: https://forms.gle/ybq9Krt8jtBL3iCk7
+# Copy package manifests first to leverage Docker layer caching
+COPY package*.json ./
 
-ARG NODE_VERSION=20.9.0
+# Install only  dependencies to keep the image minimal and secure
+RUN npm ci --omit=dev
 
-FROM node:${NODE_VERSION}-alpine
+# ---------------------------------
+# Stage 2: Final Runtime
+# ---------------------------------
+FROM node:20-alpine AS runtime
 
-# Use devlopment node environment by default.
-ENV NODE_ENV devlopment
+# Enforce  mode and configure the default application port
+ENV NODE_ENV=production PORT=3000
+WORKDIR /app
 
+# Copy  node_modules from the dependencies stage with proper file ownership
+COPY --from=dependencies --chown=node:node /app/node_modules ./node_modules
 
-WORKDIR /usr/src/app
+# Copy application source code with non-root ownership
+COPY --chown=node:node package.json ./package.json
+COPY --chown=node:node src ./src
 
-# Download dependencies as a separate step to take advantage of Docker's caching.
-# Leverage a cache mount to /root/.npm to speed up subsequent builds.
-# Leverage a bind mounts to package.json and package-lock.json to avoid having to copy them into
-# into this layer.
-RUN --mount=type=bind,source=package.json,target=package.json \
-    --mount=type=bind,source=package-lock.json,target=package-lock.json \
-    --mount=type=cache,target=/root/.npm \
-    npm ci --omit=dev
-
-# Run the application as a non-root user.
+# Switch to the built-in non-root user for security (container hardening)
 USER node
 
-# Copy the rest of the source files into the image.
-COPY ./src/ .
-
-# Expose the port that the application listens on.
+# Inform Docker that the container listens on port 3000 at runtime
 EXPOSE 3000
 
-# Run the application.
-CMD node app.js
+# Container liveness/readiness engine probe linked directly to the README endpoint
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD ["node", "src/healthcheck.js"]
+
+# Start the application using the preferred array/exec syntax
+CMD ["node", "src/app.js"]

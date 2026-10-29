@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="A production-minded Node.js service deployment demo.">
+    <title>Pearl Node Service</title>
+    <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="/assets/css/styles.css">
+  </head>
+  <body>
+    <main class="card">
+      <span class="eyebrow">Node.js · Express · AWS ECS Fargate</span>
+      <h1>Pearl Node Service</h1>
+      <p class="status" role="status"><span class="status__dot" aria-hidden="true"></span>Service is running</p>
+      <p class="description">A compact, production-minded deployment demo showing how a Node.js service can be packaged and operated on AWS.</p>
+      <ul class="features">
+        <li>Container image published to Amazon ECR</li>
+        <li>Service deployed on Amazon ECS Fargate behind an Application Load Balancer</li>
+        <li>Infrastructure described with Terraform</li>
+        <li>Health checks and structured request logs included</li>
+      </ul>
+      <nav class="links" aria-label="Service links">
+        <a href="/api/v1/info">Service info</a>
+        <a href="/health/live">Liveness</a>
+        <a href="/health/ready">Readiness</a>
+      </nav>
+    </main>
+  </body>
+</html>
